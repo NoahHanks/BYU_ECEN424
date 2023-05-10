@@ -1,0 +1,20 @@
+
+
+store_prod:
+    // dest is stored in %rdi
+    // x is stored in %rsi
+    // y is stored in %rdx
+
+    movq     %rdx, %rax         // %rax = y
+    cqto                        // %rax = y_l, %rdx = y_h
+    movq     %rsi, %rcx         // %rcx = x
+    sarq     $63, %rcx          // if x is positive, %rcx = 0, %rcx = -1 otherwise
+    imulq    %rax, %rcx         // %rcx = %rax * %rcx, (y_l * rcx)
+    imulq    %rsi, %rdx         // %rdx = %rsi * %rdx, (x_l * y_h)
+    addq     %rdx, %rcx         // %rcx = %rdx + %rcx, ((y_l * x_sign) + (x_l * y_h))
+    mulq     %rsi               // %rax = lower 64 bits of unsigned multiply of x * 7; rdx = upper 64 bits
+    addq     %rcx, %rdx         // %rdx = %rcx + %rdx
+    movq     %rax, (%rdi)       // Puts the lower 64 bits into dest
+    movq     %rdx, 8(%rdi)      // Puts the upper 64 bits into dest
+    ret
+
